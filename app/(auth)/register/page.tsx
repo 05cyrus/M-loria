@@ -31,7 +31,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await registerUser(email, password);
-      router.replace("/setup");
+      router.replace("/verify-email");
     } catch (err: unknown) {
       setError((err as Error).message);
     } finally {

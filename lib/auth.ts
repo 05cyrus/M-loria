@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  sendEmailVerification,
   User,
   AuthError,
 } from "firebase/auth";
@@ -16,6 +17,8 @@ export async function registerUser(
 ): Promise<User> {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
+    // Send email verification
+    await sendEmailVerification(result.user);
     // Create initial user doc
     await createUserProfile(result.user.uid, {
       uid: result.user.uid,
