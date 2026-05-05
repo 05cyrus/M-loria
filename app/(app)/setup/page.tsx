@@ -1,12 +1,11 @@
 // app/(app)/setup/page.tsx
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateGoals } from "@/lib/ai";
 import { updateUserProfile } from "@/lib/firestore";
 import { calculateAge } from "@/lib/utils";
-import { useDebounce } from "@/hooks/useDebounce";
 import type { AIGoalResult } from "@/types";
 import {
   Leaf, User, Phone, Calendar, Ruler, Weight,
@@ -24,8 +23,6 @@ export default function SetupPage() {
   const [form, setForm] = useState({
     name: "", phone: "", dob: "", height: "", weight: "",
   });
-  const debouncedForm = useDebounce(form, 500);
-
   const [aiResult, setAiResult] = useState<AIGoalResult | null>(null);
   const [goalType, setGoalType] = useState<"weight_loss" | "muscle_gain" | "maintain" | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,35 +32,26 @@ export default function SetupPage() {
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  useEffect(() => {
-    async function getAiGoals() {
-      if (debouncedForm.dob && debouncedForm.height && debouncedForm.weight && debouncedForm.name) {
-        setError("");
-        setLoading(true);
-        try {
-          const age = calculateAge(debouncedForm.dob);
-          const result = await calculateGoals({
-            name: debouncedForm.name,
-            age,
-            height: Number(debouncedForm.height),
-            weight: Number(debouncedForm.weight),
-          });
-          setAiResult(result);
-          setStep("ai_result");
-        } catch (err: unknown) {
-          setError((err as Error).message);
-        } finally {
-          setLoading(false);
-        }
-      }
-    }
-    getAiGoals();
-  }, [debouncedForm]);
-
   async function handleInfoSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (aiResult) {
+    if (!form.dob || !form.height || !form.weight || !form.name) return;
+
+    setError("");
+    setLoading(true);
+    try {
+      const age = calculateAge(form.dob);
+      const result = await calculateGoals({
+        name: form.name,
+        age,
+        height: Number(form.height),
+        weight: Number(form.weight),
+      });
+      setAiResult(result);
       setStep("ai_result");
+    } catch (err: unknown) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
     }
   }
 
